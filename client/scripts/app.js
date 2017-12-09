@@ -17,7 +17,15 @@ class App {
       $(document).on('click', '.submit', app.handleSubmit);
       $(document).on('click', '.addroom', app.addRoom);
       $('#rooms').on('change', '#roomSelect', function() {
+        let $roomName = $('#rooms #roomSelect');
+        app.clearMessages();
+        let roomData = _.filter(app.currentMessages, function(message) {
+          return message.roomname === $roomName.val();
+        });
+        console.log(roomData);
+        app.renderRoom(roomData);   
       });
+        
       // $('#main').on('click', '.room', function() {
       //   app.clearMessages();
       //   let roomData = _.filter(currentMessages, function(message) {
@@ -60,9 +68,7 @@ class App {
       contentType: 'application/json',
       success: function (data) {
         console.log('chatterbox: Message fetched');
-        // let safeArr = [];
-        // // data.results.forEach((message) => safeArr.push(xssEscape(message)));
-        // safeArr.forEach((message) => app.currentMessages.push(message));
+        console.log(data);
         app.renderData(data);
       },
       error: function (data) {
@@ -77,8 +83,14 @@ class App {
   }
   
   renderData(data) {
+    //take the data from the server 
+      //rendering the message 
+        //append it to the DOM @ #chats
+        //(questionable) pushing the XSS escaped version of each object to currentMessages
+          //currentMessages can be filtered for room selection
     for (var i = 0; i < data.results.length; i++) {          
-      app.renderMessage(xssEscape(data.results[i]));  
+      app.renderMessage(xssEscape(data.results[i]));
+      app.currentMessages.push(xssEscape(data.results[i]));  
     }
   }
   
@@ -86,8 +98,11 @@ class App {
     $('#chats').append(`<div class="messages"><a href="#" class="username">${message.username}</a>: ${message.text}</div>`);
   }
   
-  renderRoom(roomName) {
-    $('#roomSelect').prepend(`<option value="${roomName}"> ${roomName} </option>`);
+  renderRoom(data) {
+    for (var i = 0; i < data.length; i++) {
+      console.log(data[i]);          
+      app.renderMessage(xssEscape(data[i]));
+    }
   }
   
   handleUsernameClick() {
@@ -97,23 +112,24 @@ class App {
   handleSubmit() {
     let username = window.location.search.slice(10);
     let message = $('#message').val();
-    var obj = {};
-    
+    let roomname = $('#rooms #roomSelect').val();
+    let obj = {};
+    obj.roomname = roomname;
     obj.text = message;
     obj.username = username;
     app.send(obj);    
   }
+  
   addRoom() {
     //retrieve value from the input field
       //check value against array of existing values
         //if non-existent, then push to array;
           //array values reflect <option> values in HTML
     let inputRoomName = $('#message').val();
-    console.log(inputRoomName);
     if (inputRoomName.length && app.roomNames.indexOf(inputRoomName) === -1) {
       app.roomNames.push(inputRoomName);
       console.log(app.roomNames);
-      $('#roomSelect').prepend(`<option class="room" value="${inputRoomName}"> ${inputRoomName} </option>`);
+      $('#roomSelect').append(`<option class="room" value="${inputRoomName}"> ${inputRoomName} </option>`);
     } else {
       alert('Room already exists!');
     }  
