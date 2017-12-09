@@ -2,7 +2,6 @@ class App {
   constructor() {
     this.server = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
     this.init();
-    this.fetch();
     this.roomNames = [];
     this.currentMessages = [];
     // setInterval(() => this.fetch(), 5000);
@@ -11,32 +10,16 @@ class App {
   
   init() {
     $(document).ready(function() {
+      app.fetch();
       $(document).on('click', '.username', app.handleUsernameClick);
       // $('.submit').click(app.handleSubmit);
-      $(document).on('click', '.clear', app.clearMessages);
+      $(document).on('click', '.clear', app.refreshData);
       $(document).on('click', '.submit', app.handleSubmit);
-      $(document).on('click', '.addroom', app.addRoom);
+      $(document).on('click', '.addroom', app.addInputRoom);
       $('#rooms').on('change', '#roomSelect', function() {
-        let $roomName = $('#rooms #roomSelect');
-        app.clearMessages();
-        let roomData = _.filter(app.currentMessages, function(message) {
-          return message.roomname === $roomName.val();
-        });
-        console.log(roomData);
-        app.renderRoom(roomData);   
+        let $roomName = $('#rooms #roomSelect').val();
+        app.renderRoom($roomName);  
       });
-        
-      // $('#main').on('click', '.room', function() {
-      //   app.clearMessages();
-      //   let roomData = _.filter(currentMessages, function(message) {
-      //     message.roomname === $(this).val();
-      //   });
-      //   app.renderData(roomData);   
-      // });
-      /*
-      $('#main').on('click', '.room', app.changeRoom);
-       on click/select of roomname, filter data to only show messages match roomname  
-      */
     });
   }
   
@@ -60,17 +43,14 @@ class App {
     }); 
   }
   
-  fetch() {
+  fetch(options = {order: '-updatedAt'}, callback = app.renderData) {
     $.ajax({
   // This is the url you should use to communicate with the parse API server.
-      url: `${this.server}?order=-updatedAt`,
+      url: 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages?',
       type: 'GET',
+      data: options,
       contentType: 'application/json',
-      success: function (data) {
-        console.log('chatterbox: Message fetched');
-        console.log(data);
-        app.renderData(data);
-      },
+      success: callback,
       error: function (data) {
     // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
         console.error('chatterbox: Failed to fetch message', data);
@@ -82,27 +62,27 @@ class App {
     $('#chats').empty();
   }
   
+  refreshData() {
+    app.clearMessages();
+    app.fetch();
+  }
+  
   renderData(data) {
-    //take the data from the server 
-      //rendering the message 
-        //append it to the DOM @ #chats
-        //(questionable) pushing the XSS escaped version of each object to currentMessages
-          //currentMessages can be filtered for room selection
-    for (var i = 0; i < data.results.length; i++) {          
+    for (var i = 0; i < data.results.length; i++) {      
       app.renderMessage(xssEscape(data.results[i]));
-      app.currentMessages.push(xssEscape(data.results[i]));  
+      if (app.roomNames.indexOf(data.results[i].roomname) === -1) {
+        app.roomNames.push(data.results[i].roomname);
+      }
     }
+  }
+  
+  renderRoom(roomName) {
+    app.clearMessages;
+    app.fetch({order: '-updatedAt', where: {roomname: roomName}});
   }
   
   renderMessage(message) {
     $('#chats').append(`<div class="messages"><a href="#" class="username">${message.username}</a>: ${message.text}</div>`);
-  }
-  
-  renderRoom(data) {
-    for (var i = 0; i < data.length; i++) {
-      console.log(data[i]);          
-      app.renderMessage(xssEscape(data[i]));
-    }
   }
   
   handleUsernameClick() {
@@ -110,29 +90,30 @@ class App {
   }
   
   handleSubmit() {
-    let username = window.location.search.slice(10);
-    let message = $('#message').val();
-    let roomname = $('#rooms #roomSelect').val();
-    let obj = {};
-    obj.roomname = roomname;
-    obj.text = message;
-    obj.username = username;
-    app.send(obj);    
+    let userData = {
+      username: window.location.search.slice(10),
+      text: $('#message').val(),
+      roomname: $('#rooms #roomSelect').val()
+    };
+    app.send(userData);    
   }
   
-  addRoom() {
-    //retrieve value from the input field
-      //check value against array of existing values
-        //if non-existent, then push to array;
-          //array values reflect <option> values in HTML
+  addInputRoom() {
     let inputRoomName = $('#message').val();
     if (inputRoomName.length && app.roomNames.indexOf(inputRoomName) === -1) {
       app.roomNames.push(inputRoomName);
-      console.log(app.roomNames);
       $('#roomSelect').append(`<option class="room" value="${inputRoomName}"> ${inputRoomName} </option>`);
     } else {
       alert('Room already exists!');
     }  
+  }
+  
+  addCommunityRooms() {
+    $('#roomSelect').empty();
+    for (var i = 0; i < app.roomNames.length; i++) {
+      console.log(app.roomNames[i]);
+      $('#roomSelect').append(`<option class="room" value="${app.roomNames[i]}"> ${app.roomNames[i]} </option>`);
+    }
   }
 }
 var app = new App();
