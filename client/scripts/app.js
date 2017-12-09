@@ -13,11 +13,12 @@ class App {
       app.fetch();
       $(document).on('click', '.username', app.handleUsernameClick);
       // $('.submit').click(app.handleSubmit);
-      $(document).on('click', '.clear', app.refreshData);
+      $(document).on('click', '.refresh', app.refreshData);
       $(document).on('click', '.submit', app.handleSubmit);
       $(document).on('click', '.addroom', app.addInputRoom);
       $('#rooms').on('change', '#roomSelect', function() {
         let $roomName = $('#rooms #roomSelect').val();
+        app.clearMessages();
         app.renderRoom($roomName);  
       });
     });
@@ -32,7 +33,6 @@ class App {
       contentType: 'application/json',
       success: function (data) {
         console.log('chatterbox: Message sent');
-        console.log(data);
         app.clearMessages();
         app.fetch();
       },
@@ -102,18 +102,13 @@ class App {
     let inputRoomName = $('#message').val();
     if (inputRoomName.length && app.roomNames.indexOf(inputRoomName) === -1) {
       app.roomNames.push(inputRoomName);
-      $('#roomSelect').append(`<option class="room" value="${inputRoomName}"> ${inputRoomName} </option>`);
+      for (var i = 0; i < app.roomNames.length; i++) {
+        $('#roomSelect').append(`<option class="room" value="${app.roomNames[i]}"> ${app.roomNames[i]} </option>`);  
+      }
     } else {
       alert('Room already exists!');
-    }  
-  }
-  
-  addCommunityRooms() {
-    $('#roomSelect').empty();
-    for (var i = 0; i < app.roomNames.length; i++) {
-      console.log(app.roomNames[i]);
-      $('#roomSelect').append(`<option class="room" value="${app.roomNames[i]}"> ${app.roomNames[i]} </option>`);
     }
+    app.renderRoom(inputRoomName);  
   }
 }
 var app = new App();
