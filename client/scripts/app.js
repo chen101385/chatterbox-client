@@ -11,18 +11,20 @@ class App {
   
   init() {
     $(document).ready(function() {
-      $('#main').on('click', '.username', app.handleUsernameClick);
+      $(document).on('click', '.username', app.handleUsernameClick);
       // $('.submit').click(app.handleSubmit);
-      $('#main').on('click', '.clear', app.clearMessages);
-      $('#main').on('click', '.submit', app.handleSubmit);
-      $('#main').on('click', '.addRoom', app.addRoom);
-      $('#main').on('click', '.room', function() {
-        app.clearMessages();
-        let roomData = _.filter(currentMessages, function(message) {
-          message.roomname === $(this).val();
-        });
-        app.renderData(roomData);   
+      $(document).on('click', '.clear', app.clearMessages);
+      $(document).on('click', '.submit', app.handleSubmit);
+      $(document).on('click', '.addroom', app.addRoom);
+      $('#rooms').on('change', '#roomSelect', function() {
       });
+      // $('#main').on('click', '.room', function() {
+      //   app.clearMessages();
+      //   let roomData = _.filter(currentMessages, function(message) {
+      //     message.roomname === $(this).val();
+      //   });
+      //   app.renderData(roomData);   
+      // });
       /*
       $('#main').on('click', '.room', app.changeRoom);
        on click/select of roomname, filter data to only show messages match roomname  
@@ -58,10 +60,9 @@ class App {
       contentType: 'application/json',
       success: function (data) {
         console.log('chatterbox: Message fetched');
-        console.log(data);
-        let safeArr = [];
-        data.results.forEach((message) => safeArr.push(xssEscape(message)));
-        safeArr.forEach((message) => app.currentMessages.push(message));
+        // let safeArr = [];
+        // // data.results.forEach((message) => safeArr.push(xssEscape(message)));
+        // safeArr.forEach((message) => app.currentMessages.push(message));
         app.renderData(data);
       },
       error: function (data) {
@@ -77,13 +78,12 @@ class App {
   
   renderData(data) {
     for (var i = 0; i < data.results.length; i++) {          
-      app.renderMessage(data.results[i]);  
+      app.renderMessage(xssEscape(data.results[i]));  
     }
   }
   
   renderMessage(message) {
     $('#chats').append(`<div class="messages"><a href="#" class="username">${message.username}</a>: ${message.text}</div>`);
-    console.log(`${message.text}`);
   }
   
   renderRoom(roomName) {
@@ -119,6 +119,5 @@ class App {
     }  
   }
 }
-
 var app = new App();
 
