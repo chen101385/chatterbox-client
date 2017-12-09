@@ -24,7 +24,7 @@
 </head>
 <body>
 <div id="mocha"></div>
-<div id="testarea" style="display: none;">
+<div id="testarea">
 
   <div id="main">
     <h1>chatterbox</h1>
@@ -32,10 +32,14 @@
     <div id="rooms">
       Room:
       <select id="roomSelect">
+      <!--  
+       option 
+      -->
       </select>
     </div>
     <form action="#" id="send" method="post">
       <input type="text" name="message" id="message"/>
+      <!-- <button type="submit" class="submit">submit</button> -->
       <input type="submit" name="submit" class="submit"/>
     </form>
     <div id="chats"></div>
