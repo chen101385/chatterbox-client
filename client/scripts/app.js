@@ -47,19 +47,20 @@ class App {
   
   fetch(options = {order: '-updatedAt'}, callback = app.renderData) {
     $.ajax({
-  // This is the url you should use to communicate with the parse API server.
+      // This is the url you should use to communicate with the parse API server.
       url: 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages?',
       type: 'GET',
       data: options,
       contentType: 'application/json',
       success: callback,
       error: function (data) {
-    // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+        // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
         console.error('chatterbox: Failed to fetch message', data);
       }
     }); 
   }
   
+  // clears all the children on chats div
   clearMessages() {
     $('#chats').empty();
   }
@@ -69,6 +70,7 @@ class App {
     app.fetch();
   }
   
+  // takes in data parameter and sends escaped results to rendermessage
   renderData(data) {
     console.log(data);
     for (var i = 0; i < data.results.length; i++) {      
@@ -81,6 +83,7 @@ class App {
   
   renderRoom() {
     let inputRoomName = $('#message').val();
+    // iterate through roomnames array to append to room selector
     for (var i = 0; i < app.roomNames.length; i++) {
       let cleanName = xssEscape(app.roomNames[i]);
       $('#roomSelect').append(`<option class="room" value="${cleanName}"> ${cleanName} </option>`);  
@@ -89,6 +92,7 @@ class App {
   
   renderMessage(message) {
     $('#chats').append(`<div class="messages ${message.username}"><a href="#" class="username ${message.username}">${message.username}</a>: ${message.text}</div>`);
+    // bolds titles that are in the friends array
     if (app.friends.indexOf(message.username) !== -1) {
       $(`.${message.username}`).css({'font-weight': 'bold'});
     }
@@ -96,7 +100,7 @@ class App {
   
   handleUsernameClick(event) {
     event.preventDefault();
-    // event.currentTarget.text
+    // when called pushes clicked name into array
     app.friends.push($(event.currentTarget).text());
     app.fetch();
   }
